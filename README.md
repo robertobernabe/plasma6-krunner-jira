@@ -1,22 +1,35 @@
-Runner Template
-----------------------
+# Jira KRunner Plugin for KDE Plasma 6
 
-### Build instructions
+A KRunner plugin that matches Jira issue keys (e.g. `PROJ-123`) and opens them directly in your web browser.
 
-```
-cd /where/your/runner/is/installed
-mkdir build
+### Features
+- Matches Jira ticket identifiers in search queries (e.g. `ABC-123`).
+- Configurable Jira Base URL via KDE System Settings GUI or CLI.
+
+### Build & Installation
+
+```bash
+mkdir -p build
 cd build
-cmake -DKDE_INSTALL_PLUGINDIR=`kf5-config --qt-plugins` ..
-make
-make install
-kquitapp5 krunner
+cmake -DKDE_INSTALL_PLUGINDIR=$(qtpaths6 --plugin-dir) -DCMAKE_BUILD_TYPE=Release ..
+make -j$(nproc)
+sudo make install
+kquitapp6 krunner
 ```
 
-After this you should see your runner in the system settings:  
-`systemsettings5 kcm_plasmasearch`
+Alternatively, run `./install.sh`.
 
-You can also launch KRunner via Alt-F2 or Alt-Space and you will find your runner.
+### Configuration
 
-If you feel confident about your runner you can upload it to the KDE Store
-https://store.kde.org/browse/cat/628/order/latest/.
+#### Via KDE System Settings (GUI)
+1. Open **System Settings** -> **Plasma Search** (or run `systemsettings kcm_plasmasearch`).
+2. Locate **Jira** under KRunner plugins and click the configure button.
+3. Enter your organization's Jira base URL (e.g. `https://your-company.atlassian.net/browse/`) and save.
+
+#### Via Terminal / Command Line
+You can set the Jira base URL using `kwriteconfig6`:
+```bash
+kwriteconfig6 --file krunnerrc --group Runners --group jirarunner --key jiraUrl "https://your-company.atlassian.net/browse/"
+```
+
+KRunner automatically reloads its configuration.

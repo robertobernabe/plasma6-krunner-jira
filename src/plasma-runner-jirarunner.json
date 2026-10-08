@@ -1,0 +1,18 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "nemish94@gmail.com",
+                "Name": "Vitalii Koreniev"
+            }
+        ],
+        "Description": "Matches Jira issue keys and opens them in the browser",
+        "EnabledByDefault": true,
+        "Icon": "jira",
+        "Id": "jirarunner",
+        "License": "LGPL-2.1-or-later",
+        "Name": "Jira",
+        "Version": "1.0"
+    },
+    "X-KDE-ConfigModule": "kf6/krunner/kcms/kcm_krunner_jirarunner"
+}

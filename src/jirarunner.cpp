@@ -1,5 +1,5 @@
 /*
-    SPDX-FileCopyrightText: %{CURRENT_YEAR} %{AUTHOR} <%{EMAIL}>
+    SPDX-FileCopyrightText: 2021 Vitalii Koreniev <nemish94@gmail.com>
 
     SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -7,45 +7,79 @@
 #include "jirarunner.h"
 
 // KF
+#include <KConfigGroup>
 #include <KLocalizedString>
+#include <KPluginFactory>
 #include <KRunner/QueryMatch>
 #include <QDesktopServices>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 #include <QString>
+#include <QUrl>
 
-JiraRunner::JiraRunner(QObject *parent, const QVariantList &args)
-    : Plasma::AbstractRunner(parent, args)
+JiraRunner::JiraRunner(QObject *parent, const KPluginMetaData &metaData)
+    : KRunner::AbstractRunner(parent, metaData)
 {
-    setObjectName(QStringLiteral("JiraRunner"));
-    setPriority(LowPriority);
     setMinLetterCount(4);
+    reloadConfiguration();
 }
 
-JiraRunner::~JiraRunner()
+JiraRunner::~JiraRunner() = default;
+
+void JiraRunner::reloadConfiguration()
 {
+    const KConfigGroup grp = config();
+    setBaseUrl(grp.readEntry(QStringLiteral("jiraUrl"), QString()));
 }
 
-void JiraRunner::match(Plasma::RunnerContext &context)
+void JiraRunner::setBaseUrl(const QString &url)
+{
+    m_jiraUrl = url.trimmed();
+    if (!m_jiraUrl.isEmpty() && !m_jiraUrl.endsWith(QLatin1Char('/'))) {
+        m_jiraUrl.append(QLatin1Char('/'));
+    }
+}
+
+QString JiraRunner::baseUrl() const
+{
+    return m_jiraUrl;
+}
+
+QUrl JiraRunner::buildUrl(const QString &issueKey) const
+{
+    if (m_jiraUrl.isEmpty()) {
+        return QUrl();
+    }
+    return QUrl(m_jiraUrl + issueKey);
+}
+
+void JiraRunner::match(KRunner::RunnerContext &context)
 {
     const QString term = context.query();
-    const QRegularExpression regex(QString::fromUtf8("\\w+-\\d+"));
+    const QRegularExpression regex(QStringLiteral("\\w+-\\d+"));
     const QRegularExpressionMatch termMatch = regex.match(term);
-    if(termMatch.hasMatch()){
-        Plasma::QueryMatch match(this);
+    if (termMatch.hasMatch()) {
+        KRunner::QueryMatch match(this);
         match.setText(termMatch.captured());
+        if (m_jiraUrl.isEmpty()) {
+            match.setSubtext(i18n("Jira URL is not configured. Click to configure."));
+        }
+        match.setCategoryRelevance(KRunner::QueryMatch::CategoryRelevance::Low);
         context.addMatch(match);
     }
 }
 
-void JiraRunner::run(const Plasma::RunnerContext &context, const Plasma::QueryMatch &match)
+void JiraRunner::run(const KRunner::RunnerContext &context, const KRunner::QueryMatch &match)
 {
     Q_UNUSED(context)
-    Q_UNUSED(match)
-    QDesktopServices::openUrl(QUrl(QString::fromUtf8("https://dermpro.atlassian.net/browse/").append(match.text())));
+    if (m_jiraUrl.isEmpty()) {
+        QProcess::startDetached(QStringLiteral("kcmshell6"), {QStringLiteral("kcm_krunner_jirarunner")});
+        return;
+    }
+    QDesktopServices::openUrl(buildUrl(match.text()));
 }
 
-K_EXPORT_PLASMA_RUNNER_WITH_JSON(JiraRunner, "plasma-runner-jirarunner.json")
+K_PLUGIN_CLASS_WITH_JSON(JiraRunner, "plasma-runner-jirarunner.json")
 
-// needed for the QObject subclass declared as part of K_EXPORT_PLASMA_RUNNER_WITH_JSON
 #include "jirarunner.moc"
