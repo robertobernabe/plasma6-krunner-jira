@@ -22,7 +22,7 @@ JiraRunnerConfig::JiraRunnerConfig(QObject *parent, const KPluginMetaData &metaD
     m_urlLineEdit->setPlaceholderText(QStringLiteral("https://your-company.atlassian.net/browse/"));
     m_urlLineEdit->setClearButtonEnabled(true);
 
-    auto explanation = new QLabel(i18n("Base URL for Jira tickets (e.g. https://your-company.atlassian.net/browse/)"), widget());
+    auto explanation = new QLabel(i18n("Base URL for Jira (e.g. https://your-company.atlassian.net/browse/).\nSupports direct ticket keys (e.g. PROJ-123) and 'jira <ticket | search term>'."), widget());
     explanation->setWordWrap(true);
 
     layout->addRow(i18n("Jira URL:"), m_urlLineEdit);

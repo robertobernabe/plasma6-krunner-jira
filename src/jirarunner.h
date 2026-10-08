@@ -18,12 +18,14 @@ public:
     explicit JiraRunner(QObject *parent, const KPluginMetaData &metaData);
     ~JiraRunner() override;
 
+    void init() override;
     void match(KRunner::RunnerContext &context) override;
     void run(const KRunner::RunnerContext &context, const KRunner::QueryMatch &match) override;
 
     void reloadConfiguration() override;
 
     QUrl buildUrl(const QString &issueKey) const;
+    QUrl buildSearchUrl(const QString &searchTerm) const;
     void setBaseUrl(const QString &url);
     QString baseUrl() const;
 

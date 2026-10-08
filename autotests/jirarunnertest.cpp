@@ -18,6 +18,11 @@ private Q_SLOTS:
     void testMatchQueryWhenUnconfigured();
     void testNoMatchQuery();
     void testConfigReloading();
+    void testPrefixedTicketQuery();
+    void testPrefixedSearchQuery();
+    void testPrefixedCaseInsensitive();
+    void testUnconfiguredPrefixedSearch();
+    void testSearchUrlConstruction();
 };
 
 void JiraRunnerTest::testDefaultUrlIsEmpty()
@@ -110,6 +115,74 @@ void JiraRunnerTest::testConfigReloading()
         grp.writeEntry(QStringLiteral("jiraUrl"), previousValue);
     }
     grp.sync();
+}
+
+void JiraRunnerTest::testPrefixedTicketQuery()
+{
+    KPluginMetaData md;
+    JiraRunner runner(nullptr, md);
+    runner.setBaseUrl(QStringLiteral("https://mycompany.atlassian.net/browse/"));
+    KRunner::RunnerContext context;
+    context.setQuery(QStringLiteral("jira ABC-123"));
+    runner.match(context);
+
+    QCOMPARE(context.matches().count(), 1);
+    QCOMPARE(context.matches().constFirst().text(), QStringLiteral("ABC-123"));
+    QVERIFY(context.matches().constFirst().subtext().isEmpty());
+}
+
+void JiraRunnerTest::testPrefixedSearchQuery()
+{
+    KPluginMetaData md;
+    JiraRunner runner(nullptr, md);
+    runner.setBaseUrl(QStringLiteral("https://mycompany.atlassian.net/browse/"));
+    KRunner::RunnerContext context;
+    context.setQuery(QStringLiteral("jira login authentication error"));
+    runner.match(context);
+
+    QCOMPARE(context.matches().count(), 1);
+    QVERIFY(context.matches().constFirst().text().contains(QStringLiteral("login authentication error")));
+    QVERIFY(context.matches().constFirst().subtext().isEmpty());
+}
+
+void JiraRunnerTest::testPrefixedCaseInsensitive()
+{
+    KPluginMetaData md;
+    JiraRunner runner(nullptr, md);
+    runner.setBaseUrl(QStringLiteral("https://mycompany.atlassian.net/browse/"));
+    KRunner::RunnerContext context;
+    context.setQuery(QStringLiteral("JIRA PROJ-42"));
+    runner.match(context);
+
+    QCOMPARE(context.matches().count(), 1);
+    QCOMPARE(context.matches().constFirst().text(), QStringLiteral("PROJ-42"));
+}
+
+void JiraRunnerTest::testUnconfiguredPrefixedSearch()
+{
+    KPluginMetaData md;
+    JiraRunner runner(nullptr, md);
+    KRunner::RunnerContext context;
+    context.setQuery(QStringLiteral("jira crash on startup"));
+    runner.match(context);
+
+    QCOMPARE(context.matches().count(), 1);
+    QVERIFY(context.matches().constFirst().text().contains(QStringLiteral("crash on startup")));
+    QVERIFY(!context.matches().constFirst().subtext().isEmpty());
+}
+
+void JiraRunnerTest::testSearchUrlConstruction()
+{
+    KPluginMetaData md;
+    JiraRunner runner(nullptr, md);
+    QVERIFY(runner.buildSearchUrl(QStringLiteral("some query")).isEmpty());
+
+    runner.setBaseUrl(QStringLiteral("https://mycompany.atlassian.net/browse/"));
+    QUrl url = runner.buildSearchUrl(QStringLiteral("login error"));
+    // Expect base URL stripped of /browse/ or pointing to QuickSearch
+    // e.g. https://mycompany.atlassian.net/secure/QuickSearch.jspa?searchString=login+error
+    QVERIFY(url.toString().contains(QStringLiteral("QuickSearch.jspa")));
+    QVERIFY(url.toString().contains(QStringLiteral("searchString=login")));
 }
 
 QTEST_MAIN(JiraRunnerTest)

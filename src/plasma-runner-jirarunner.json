@@ -6,13 +6,13 @@
                 "Name": "Vitalii Koreniev"
             }
         ],
-        "Description": "Matches Jira issue keys and opens them in the browser",
+        "Description": "Matches Jira issue keys and searches Jira via 'jira <key|query>'",
         "EnabledByDefault": true,
         "Icon": "jira",
         "Id": "jirarunner",
         "License": "LGPL-2.1-or-later",
         "Name": "Jira",
-        "Version": "1.0"
+        "Version": "1.1"
     },
     "X-KDE-ConfigModule": "kf6/krunner/kcms/kcm_krunner_jirarunner"
 }
