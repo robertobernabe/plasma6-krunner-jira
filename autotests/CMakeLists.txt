@@ -7,6 +7,10 @@ target_include_directories(jirarunnertest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
 
+target_compile_definitions(jirarunnertest PRIVATE
+    TEST_SRC_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
 target_link_libraries(jirarunnertest
     Qt6::Test
     Qt6::Gui

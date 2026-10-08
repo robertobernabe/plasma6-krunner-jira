@@ -1,7 +1,9 @@
 #include <QTest>
 #include <QUrl>
+#include <KConfigGroup>
 #include <KPluginMetaData>
 #include <KRunner/RunnerContext>
+#include <KSharedConfig>
 #include "jirarunner.h"
 
 class JiraRunnerTest : public QObject
@@ -14,6 +16,7 @@ private Q_SLOTS:
     void testUrlConstructionWithoutSlash();
     void testMatchQuery();
     void testNoMatchQuery();
+    void testConfigReloading();
 };
 
 void JiraRunnerTest::testUrlConstructionDefault()
@@ -64,6 +67,32 @@ void JiraRunnerTest::testNoMatchQuery()
     runner.match(context);
 
     QCOMPARE(context.matches().count(), 0);
+}
+
+void JiraRunnerTest::testConfigReloading()
+{
+    KConfigGroup grp = KSharedConfig::openConfig(QStringLiteral("krunnerrc"))->group(QStringLiteral("Runners")).group(QStringLiteral("jirarunner"));
+    const QString previousValue = grp.readEntry(QStringLiteral("jiraUrl"), QString());
+    grp.writeEntry(QStringLiteral("jiraUrl"), QStringLiteral("https://custom-jira.org/browse/"));
+    grp.sync();
+
+    // Use metadata with id "jirarunner"
+    const QString jsonPath = QStringLiteral(TEST_SRC_DIR "/../src/plasma-runner-jirarunner.json");
+    const KPluginMetaData md = KPluginMetaData::fromJsonFile(jsonPath);
+    QVERIFY(md.isValid());
+    QCOMPARE(md.pluginId(), QStringLiteral("jirarunner"));
+    JiraRunner runner(nullptr, md);
+    runner.reloadConfiguration();
+    QCOMPARE(runner.baseUrl(), QStringLiteral("https://custom-jira.org/browse/"));
+    QCOMPARE(runner.buildUrl(QStringLiteral("TEST-1")).toString(), QStringLiteral("https://custom-jira.org/browse/TEST-1"));
+
+    // Cleanup
+    if (previousValue.isEmpty()) {
+        grp.deleteEntry(QStringLiteral("jiraUrl"));
+    } else {
+        grp.writeEntry(QStringLiteral("jiraUrl"), previousValue);
+    }
+    grp.sync();
 }
 
 QTEST_MAIN(JiraRunnerTest)
