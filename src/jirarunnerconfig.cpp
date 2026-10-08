@@ -34,7 +34,7 @@ JiraRunnerConfig::JiraRunnerConfig(QObject *parent, const KPluginMetaData &metaD
 void JiraRunnerConfig::load()
 {
     KConfigGroup grp = KSharedConfig::openConfig(QStringLiteral("krunnerrc"))->group(QStringLiteral("Runners")).group(QStringLiteral("jirarunner"));
-    m_urlLineEdit->setText(grp.readEntry(QStringLiteral("jiraUrl"), QStringLiteral("https://dermpro.atlassian.net/browse/")));
+    m_urlLineEdit->setText(grp.readEntry(QStringLiteral("jiraUrl"), QString()));
     setNeedsSave(false);
 }
 
@@ -48,7 +48,7 @@ void JiraRunnerConfig::save()
 
 void JiraRunnerConfig::defaults()
 {
-    m_urlLineEdit->setText(QStringLiteral("https://dermpro.atlassian.net/browse/"));
+    m_urlLineEdit->clear();
     markAsChanged();
 }
 

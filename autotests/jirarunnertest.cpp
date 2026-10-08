@@ -11,21 +11,22 @@ class JiraRunnerTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void testUrlConstructionDefault();
+    void testDefaultUrlIsEmpty();
     void testUrlConstructionCustom();
     void testUrlConstructionWithoutSlash();
-    void testMatchQuery();
+    void testMatchQueryWhenConfigured();
+    void testMatchQueryWhenUnconfigured();
     void testNoMatchQuery();
     void testConfigReloading();
 };
 
-void JiraRunnerTest::testUrlConstructionDefault()
+void JiraRunnerTest::testDefaultUrlIsEmpty()
 {
     KPluginMetaData md;
     JiraRunner runner(nullptr, md);
-    // Default URL is https://dermpro.atlassian.net/browse/
+    QVERIFY(runner.baseUrl().isEmpty());
     QUrl url = runner.buildUrl(QStringLiteral("PROJ-123"));
-    QCOMPARE(url.toString(), QStringLiteral("https://dermpro.atlassian.net/browse/PROJ-123"));
+    QVERIFY(url.isEmpty());
 }
 
 void JiraRunnerTest::testUrlConstructionCustom()
@@ -46,7 +47,21 @@ void JiraRunnerTest::testUrlConstructionWithoutSlash()
     QCOMPARE(url.toString(), QStringLiteral("https://mycompany.atlassian.net/browse/FOO-42"));
 }
 
-void JiraRunnerTest::testMatchQuery()
+void JiraRunnerTest::testMatchQueryWhenConfigured()
+{
+    KPluginMetaData md;
+    JiraRunner runner(nullptr, md);
+    runner.setBaseUrl(QStringLiteral("https://mycompany.atlassian.net/browse/"));
+    KRunner::RunnerContext context;
+    context.setQuery(QStringLiteral("Check ticket ABC-987 please"));
+    runner.match(context);
+
+    QCOMPARE(context.matches().count(), 1);
+    QCOMPARE(context.matches().constFirst().text(), QStringLiteral("ABC-987"));
+    QVERIFY(context.matches().constFirst().subtext().isEmpty());
+}
+
+void JiraRunnerTest::testMatchQueryWhenUnconfigured()
 {
     KPluginMetaData md;
     JiraRunner runner(nullptr, md);
@@ -56,12 +71,14 @@ void JiraRunnerTest::testMatchQuery()
 
     QCOMPARE(context.matches().count(), 1);
     QCOMPARE(context.matches().constFirst().text(), QStringLiteral("ABC-987"));
+    QVERIFY(!context.matches().constFirst().subtext().isEmpty());
 }
 
 void JiraRunnerTest::testNoMatchQuery()
 {
     KPluginMetaData md;
     JiraRunner runner(nullptr, md);
+    runner.setBaseUrl(QStringLiteral("https://mycompany.atlassian.net/browse/"));
     KRunner::RunnerContext context;
     context.setQuery(QStringLiteral("No ticket here"));
     runner.match(context);

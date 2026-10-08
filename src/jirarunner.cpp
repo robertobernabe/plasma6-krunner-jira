@@ -12,6 +12,7 @@
 #include <KPluginFactory>
 #include <KRunner/QueryMatch>
 #include <QDesktopServices>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 #include <QString>
@@ -19,7 +20,6 @@
 
 JiraRunner::JiraRunner(QObject *parent, const KPluginMetaData &metaData)
     : KRunner::AbstractRunner(parent, metaData)
-    , m_jiraUrl(QStringLiteral("https://dermpro.atlassian.net/browse/"))
 {
     setMinLetterCount(4);
     reloadConfiguration();
@@ -30,12 +30,7 @@ JiraRunner::~JiraRunner() = default;
 void JiraRunner::reloadConfiguration()
 {
     const KConfigGroup grp = config();
-    const QString configuredUrl = grp.readEntry(QStringLiteral("jiraUrl"), QString());
-    if (!configuredUrl.isEmpty()) {
-        setBaseUrl(configuredUrl);
-    } else {
-        setBaseUrl(QStringLiteral("https://dermpro.atlassian.net/browse/"));
-    }
+    setBaseUrl(grp.readEntry(QStringLiteral("jiraUrl"), QString()));
 }
 
 void JiraRunner::setBaseUrl(const QString &url)
@@ -53,6 +48,9 @@ QString JiraRunner::baseUrl() const
 
 QUrl JiraRunner::buildUrl(const QString &issueKey) const
 {
+    if (m_jiraUrl.isEmpty()) {
+        return QUrl();
+    }
     return QUrl(m_jiraUrl + issueKey);
 }
 
@@ -64,6 +62,9 @@ void JiraRunner::match(KRunner::RunnerContext &context)
     if (termMatch.hasMatch()) {
         KRunner::QueryMatch match(this);
         match.setText(termMatch.captured());
+        if (m_jiraUrl.isEmpty()) {
+            match.setSubtext(i18n("Jira URL is not configured. Click to configure."));
+        }
         match.setCategoryRelevance(KRunner::QueryMatch::CategoryRelevance::Low);
         context.addMatch(match);
     }
@@ -72,6 +73,10 @@ void JiraRunner::match(KRunner::RunnerContext &context)
 void JiraRunner::run(const KRunner::RunnerContext &context, const KRunner::QueryMatch &match)
 {
     Q_UNUSED(context)
+    if (m_jiraUrl.isEmpty()) {
+        QProcess::startDetached(QStringLiteral("kcmshell6"), {QStringLiteral("kcm_krunner_jirarunner")});
+        return;
+    }
     QDesktopServices::openUrl(buildUrl(match.text()));
 }
 

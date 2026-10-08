@@ -9,6 +9,7 @@ target_include_directories(jirarunnertest PRIVATE
 
 target_compile_definitions(jirarunnertest PRIVATE
     TEST_SRC_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    TRANSLATION_DOMAIN="plasma_runner_org.kde.jirarunner"
 )
 
 target_link_libraries(jirarunnertest
