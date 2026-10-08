@@ -1,5 +1,5 @@
 /*
-    SPDX-FileCopyrightText: %{CURRENT_YEAR} %{AUTHOR} <%{EMAIL}>
+    SPDX-FileCopyrightText: 2021 Vitalii Koreniev <nemish94@gmail.com>
 
     SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -8,18 +8,27 @@
 #define JIRARUNNER_H
 
 #include <KRunner/AbstractRunner>
+#include <QUrl>
 
-class JiraRunner : public Plasma::AbstractRunner
+class JiraRunner : public KRunner::AbstractRunner
 {
     Q_OBJECT
 
 public:
-    JiraRunner(QObject *parent, const QVariantList &args);
+    explicit JiraRunner(QObject *parent, const KPluginMetaData &metaData);
     ~JiraRunner() override;
 
-public: // Plasma::AbstractRunner API
-    void match(Plasma::RunnerContext &context) override;
-    void run(const Plasma::RunnerContext &context, const Plasma::QueryMatch &match) override;
+    void match(KRunner::RunnerContext &context) override;
+    void run(const KRunner::RunnerContext &context, const KRunner::QueryMatch &match) override;
+
+    void reloadConfiguration() override;
+
+    QUrl buildUrl(const QString &issueKey) const;
+    void setBaseUrl(const QString &url);
+    QString baseUrl() const;
+
+private:
+    QString m_jiraUrl;
 };
 
 #endif

@@ -1,14 +1,25 @@
 add_definitions(-DTRANSLATION_DOMAIN=\"plasma_runner_org.kde.jirarunner\")
 
-add_library(jirarunner MODULE)
-
-target_sources(jirarunner PRIVATE
+kcoreaddons_add_plugin(jirarunner SOURCES
     jirarunner.cpp
+    INSTALL_NAMESPACE "kf6/krunner"
 )
 
-kcoreaddons_desktop_to_json(jirarunner plasma-runner-jirarunner.desktop)
-target_link_libraries(jirarunner KF5::Runner KF5::I18n)
+target_link_libraries(jirarunner
+    KF6::Runner
+    KF6::I18n
+    Qt6::Gui
+    KF6::ConfigCore
+)
 
-install(TARGETS jirarunner DESTINATION ${KDE_INSTALL_PLUGINDIR}/kf5/krunner)
+kcoreaddons_add_plugin(kcm_krunner_jirarunner SOURCES
+    jirarunnerconfig.cpp
+    INSTALL_NAMESPACE "kf6/krunner/kcms"
+)
 
-install(FILES plasma-runner-jirarunner.desktop DESTINATION ${KDE_INSTALL_KSERVICES5DIR})
+target_link_libraries(kcm_krunner_jirarunner
+    KF6::KCMUtils
+    KF6::I18n
+    KF6::ConfigCore
+    Qt6::Widgets
+)

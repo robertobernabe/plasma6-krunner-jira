@@ -1,0 +1,16 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "nemish94@gmail.com",
+                "Name": "Vitalii Koreniev"
+            }
+        ],
+        "Description": "Configure Jira Runner",
+        "Icon": "jira",
+        "Id": "kcm_krunner_jirarunner",
+        "License": "LGPL-2.1-or-later",
+        "Name": "Jira Runner Configuration",
+        "Version": "1.0"
+    }
+}
